@@ -1,0 +1,102 @@
+version: "3.8"
+services: 
+    
+    #==============================================>> Database
+    mysql: 
+        image: mysql:5.7.36
+        container_name: ecommerce-db-v1
+        restart: unless-stopped
+        tty: true
+        ports:
+            - "9001:3306"
+        environment:
+            MYSQL_DATABASE: homestead
+            MYSQl_USER: homestead
+            MYSQL_PASSWORD: secret
+            MYSQL_ROOT_PASSWORD: secret
+            SERVICE_TAGS: dev
+            SERVICE_NAME: mysql
+        volumes:
+            - ./db/mysql:/var/lib/mysql
+        networks:
+            - camcyber
+
+    #==============================================>> API
+    api: 
+        container_name: ecommerce-api-v1
+        restart: unless-stopped
+        tty: true
+        build: 
+            context: ./api-v1/.
+            dockerfile: Dockerfile
+        volumes: 
+            - ./api-v1/app:/var/www/app
+            - ./api-v1/resources:/var/www/resources
+            - ./api-v1/routes:/var/www/routes
+            - ./api-v1/storage:/var/www/storage
+            - ./api-v1/database:/var/www/database
+        command: php artisan --host=0.0.0.0 serve
+        ports:
+            - "9002:8000"
+        environment: 
+
+            #===========================>> App Info
+            APP_KEY: base64:mNe36k6bz1cidhh1dLtMtjRsiMnMOyjztjti7a6rAf4=
+
+            #===========================>> JWT
+            JWT_SECRET: MTO7OmBzXhbPI2bErLjV9XEFbpCn3MHCPxKdcBxiFHjuWJirIayTB9npa4cGNAFX
+
+            #===========================>> Telegram Bot
+            TELEGRAM_BOT_TOKEN: 6876532308:AAHA9qPRUYtZiZoFaKGvPQXL9radOFT67wI
+            TELEGRAM_CHAT_ID: -1002001247521
+
+            #==========================>> DB Config
+            DB_CONNECTION: mysql
+            DB_HOST: mysql #DB_HOST
+            DB_PORT: 3306
+            DB_DATABASE: ecommerce_v1
+            DB_USERNAME: root
+            DB_PASSWORD: secret
+
+            #==========================>> FILE
+            FILE_URL: http://file:8000
+
+        networks: 
+            - camcyber
+
+    #==============================================>> File
+    file: 
+        container_name: ecommerce-file-v1  
+        build: 
+            context: ./file-v1/.
+            dockerfile: Dockerfile
+        volumes: 
+            - ./file-v1/public:/var/www/public
+        command: php artisan --host=0.0.0.0 serve
+        ports:
+            - "9003:8000"
+        networks: 
+            - camcyber
+    
+    #==============================================>> Report Generator
+    report: 
+        image: jsreport/jsreport
+        container_name: ecommerce-report-v1
+        ports:
+            - "9004:5488"
+        networks:
+            - camcyber
+    
+    #==============================================>> Web
+    web: 
+        container_name: ecommerce-web-v1
+        build:
+            context: ./admin-v1/.
+            dockerfile: Dockerfile
+        ports:
+            - "9005:80"
+        networks: 
+            - camcyber
+
+networks: 
+    camcyber:
